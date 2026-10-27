@@ -13,6 +13,7 @@ import {
   MAX_CACHED_CHAT_SESSIONS,
   setSessionCacheValue,
 } from "./session-cache.ts";
+import { detailsSnapshotSchema } from "./session-details-snapshot-schema.ts";
 import {
   MAX_CACHED_CHAT_SNAPSHOT_WEIGHT,
   MAX_CACHED_CHAT_WEIGHT,
@@ -86,6 +87,7 @@ const permissionModeSchema = json.enumeration(["read-only", "guarded", "workspac
 const snapshotSchema = json.object(
   {
     sessionState: json.optional(chatSessionStateSnapshotSchema),
+    details: detailsSnapshotSchema,
     composer: json.optional(
       json.nullable(
         json.object({

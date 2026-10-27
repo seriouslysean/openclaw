@@ -8,6 +8,7 @@ import { createSignal } from "solid-js";
 import type { GatewaySessionRow, ModelCatalogEntry } from "../../api/types.ts";
 import type { ChatFastModePresentation } from "../../lib/chat/model-select-state.ts";
 import { readPairingQrContent } from "../../lib/chat/pairing-qr.ts";
+import type { ChatDetailsSnapshot } from "./chat-details-snapshot.ts";
 import type { ChatHistoryCursor, ChatHistoryPagination } from "./chat-history-pagination.ts";
 import type { ChatSessionStateSnapshot } from "./chat-session-state-snapshot.ts";
 import type { ChatHistoryState, ChatTranscriptMetadata } from "./chat-transcript-metadata.ts";
@@ -69,6 +70,7 @@ export type ChatComposerSnapshot = Pick<
 
 export type ChatSessionSnapshot = {
   sessionState?: ChatSessionStateSnapshot;
+  details?: ChatDetailsSnapshot;
   composer?: ChatComposerSnapshot | null;
   // The board provider validates cached payloads before they can reach a view.
   board?: { snapshot: unknown; receivedAtMs: number } | null;
@@ -401,18 +403,16 @@ export function cacheChatSessionSnapshot(
     withWidgetHeights.board === undefined && existing?.snapshot.board !== undefined
       ? { ...withWidgetHeights, board: existing.snapshot.board }
       : withWidgetHeights;
-  const withComposer =
-    withBoard.composer === undefined &&
-    existing?.snapshot.composer !== undefined &&
-    existing.snapshot.sessionId === incoming.sessionId
-      ? { ...withBoard, composer: existing.snapshot.composer }
-      : withBoard;
   const snapshot =
-    withComposer.sessionState === undefined &&
-    existing?.snapshot.sessionState !== undefined &&
-    existing.snapshot.sessionId === incoming.sessionId
-      ? { ...withComposer, sessionState: existing.snapshot.sessionState }
-      : withComposer;
+    existing?.snapshot.sessionId === incoming.sessionId
+      ? {
+          ...withBoard,
+          composer:
+            withBoard.composer === undefined ? existing.snapshot.composer : withBoard.composer,
+          details: withBoard.details ?? existing.snapshot.details,
+          sessionState: withBoard.sessionState ?? existing.snapshot.sessionState,
+        }
+      : withBoard;
   const previousState = existing?.snapshot.sessionState;
   const sessionState = snapshot.sessionState;
   if (
@@ -433,6 +433,7 @@ export function cacheChatSessionSnapshot(
         previousState?.sharingRole === sessionState?.sharingRole &&
         previousState?.unarchiveAllowed === sessionState?.unarchiveAllowed &&
         previousState?.parentSession === sessionState?.parentSession)) &&
+    existing.snapshot.details === snapshot.details &&
     samePagination(existing.snapshot.pagination, snapshot.pagination)
   ) {
     return;

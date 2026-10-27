@@ -99,7 +99,7 @@ async function persist(store: SessionSnapshotStore, cacheKey: string, value: Cha
   writeSnapshotFixture(store, cacheKey, value);
   await store.flush();
 }
-const envelope = (cacheKey: string, value: ChatSessionSnapshot, projectionVersion = 6) => ({
+const envelope = (cacheKey: string, value: ChatSessionSnapshot, projectionVersion = 7) => ({
   projectionVersion,
   sessionKey: cacheKey,
   savedAt: 1,
@@ -456,7 +456,7 @@ describe("persistent chat session snapshots", () => {
 
   it.each(["direct", "prewarmed"])("discards the previous projection (%s)", async (mode) => {
     await persist(writer, sessionKey, snapshot("current"));
-    await putRawRecord(envelope(sessionKey, snapshot("old"), 5));
+    await putRawRecord(envelope(sessionKey, snapshot("old"), 6));
     if (mode === "prewarmed") {
       void prewarmChatSnapshot(sessionKey);
     }
